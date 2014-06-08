@@ -15,5 +15,7 @@
     <string name="table_label_latitude">Latitude</string>
     <string name="table_label_longitude">Longitude</string>
     <string name="table_label_altitude">Altitude</string>
+    
+    <string name="empty_string"> </string>
 
 </resources>
