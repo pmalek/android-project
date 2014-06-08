@@ -20,7 +20,6 @@
         android:orientation="horizontal"
         android:weightSum="9" >
 
-
         <TextView
             android:id="@+id/table_row_latitude"
             android:layout_width="wrap_content"

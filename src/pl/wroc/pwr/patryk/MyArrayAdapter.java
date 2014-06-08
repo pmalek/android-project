@@ -1,5 +1,6 @@
 package pl.wroc.pwr.patryk;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 import android.content.Context;
@@ -25,15 +26,18 @@ public class MyArrayAdapter extends ArrayAdapter<Coordinate> {
 	        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	    View rowView = inflater.inflate(R.layout.table_row, parent, false);
 	    
+	    DecimalFormat formatCoord = new DecimalFormat("#.00000000");
+	    DecimalFormat formatAltitude = new DecimalFormat("0.00000000000000");
+	    
 	    TextView textViewRowId = (TextView) rowView.findViewById(R.id.table_row_id);
 	    TextView textViewLatitude = (TextView) rowView.findViewById(R.id.table_row_latitude);
 	    TextView textViewLongitude = (TextView) rowView.findViewById(R.id.table_row_longitude);
 	    TextView textViewAtitude = (TextView) rowView.findViewById(R.id.table_row_altitude);
 	    
-	    textViewRowId.setText(Long.toString(values.get(position).getId()));
-	    textViewLatitude.setText(Double.toString(values.get(position).getLatitude()));
-	    textViewLongitude.setText(Double.toString(values.get(position).getLongitude()));
-	    textViewAtitude.setText(Double.toString(values.get(position).getAltitude()));
+	    textViewRowId.setText("ID: " + Long.toString(values.get(position).getId()));
+	    textViewLatitude.setText(formatCoord.format((values.get(position).getLatitude())));
+	    textViewLongitude.setText(formatCoord.format((values.get(position).getLongitude())));
+	    textViewAtitude.setText(formatAltitude.format(values.get(position).getAltitude()));
 
 	    return rowView;
 	  }

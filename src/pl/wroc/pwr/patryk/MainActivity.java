@@ -250,8 +250,6 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 			}
 			
 			View rootView = inflater.inflate(current_layout, container, false);
-/*			TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-			textView.setText(Integer.toString(current_section));*/
 			return rootView;
 		}
 	}
