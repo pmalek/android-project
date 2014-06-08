@@ -1,19 +1,24 @@
 package pl.wroc.pwr.patryk;
 
+import java.util.EventListener;
 import java.util.List;
 import java.util.Locale;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.ListFragment;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,6 +27,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
+
 
 public class MainActivity extends Activity implements ActionBar.TabListener {
 
@@ -42,9 +48,14 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	protected static final int SECTION_MAIN = 1;
 	protected static final int SECTION_DB_TABLE = 2;
 	
-	private LocationManager location_manger;
+	protected LocationManager locationManger;
 	private CoordinatesDataSource coordinates_data_source;
 	protected MyArrayAdapter adapter;
+	//protected List<EventListener> eventListenerList;
+	protected RunningListenerImpl listener;
+	protected Context context;
+	public static final int LOCATION_SETTINGS_REQUEST_CODE = 768;
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -92,8 +103,14 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 		MyLocationListener loclist = new MyLocationListener(
 				this, getApplicationContext(), coordinates_data_source);
 
-        location_manger = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        location_manger.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 1, loclist);
+        locationManger = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManger.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 1, loclist);
+        
+/*        eventListenerList = new ArrayList<EventListener>();
+        RunningListenerImpl listener = new RunningListenerImpl(this);
+		this.addEventListener(listener);*/
+        RunningListenerImpl listener = new RunningListenerImpl(this);
+        this.setListener(listener);
 	}
 
 	@Override
@@ -149,10 +166,43 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 		return adapter;
 	}
 	
+/*	public void addEventListener(EventListener listener){
+		eventListenerList.add(listener);
+	}
+	
+	public void removeEventListener(EventListener listener){
+		eventListenerList.remove(listener);
+	}*/
+	
+	public void setListener(EventListener listener){
+		this.listener = (RunningListenerImpl) listener;
+	}
+	
 	public void clear(){
 		adapter.clear();
 		coordinates_data_source.deleteAll();
 		Toast.makeText(getApplicationContext(), "Deleted all coordinate points", Toast.LENGTH_SHORT).show();
+	}
+	
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		Log.v("MYAPP", "requestCode: " + requestCode);
+		Log.v("MYAPP", "resultCode: " + resultCode);
+		
+		if(requestCode == MainActivity.LOCATION_SETTINGS_REQUEST_CODE) {
+           /* String provider = Settings.Secure.getString(
+            		activity.getApplicationContext().getContentResolver(), Settings.Secure.LOCATION_MODE);*/
+			
+			boolean isLocationProviderEnabled = 
+					locationManger.isProviderEnabled( LocationManager.GPS_PROVIDER);
+
+            Log.v("MYAPP", "isLocationProviderEnabled: " + isLocationProviderEnabled);
+            if(isLocationProviderEnabled){
+            	listener.onRunningChange(true);	
+            }
+		}
 	}
 	
 	/**
@@ -175,7 +225,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 			Fragment toReturn = null;
 			switch (position) {
 			case 0:
-				toReturn = PlaceholderFragment.newInstance(position + 1);
+				toReturn = PlaceholderFragment.newInstance(position + 1, activity);
 				break;
 			case 1:
 				toReturn = MyListFragment.newInstance(position + 1, activity);
@@ -214,12 +264,14 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 		 * The fragment argument representing the section number for this fragment.
 		 */
 		private static final String ARG_SECTION_NUMBER = "section_number";
+		private MainActivity activity;
 
 		/**
 		 * Returns a new instance of this fragment for the given section number.
 		 */
-		public static PlaceholderFragment newInstance(int sectionNumber) {
+		public static PlaceholderFragment newInstance(int sectionNumber, MainActivity activity) {
 			PlaceholderFragment fragment = new PlaceholderFragment();
+			fragment.activity = activity;
 			Bundle args = new Bundle();
 			args.putInt(ARG_SECTION_NUMBER, sectionNumber);
 			fragment.setArguments(args);
@@ -252,9 +304,41 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 			View rootView = inflater.inflate(current_layout, container, false);
 			return rootView;
 		}
+		
+
+		/* (non-Javadoc)
+		 * @see android.app.Fragment#onActivityCreated(android.os.Bundle)
+		 */
+		@Override
+		public void onActivityCreated(Bundle savedInstanceState) {
+			super.onActivityCreated(savedInstanceState);
+			
+	        Button buttonClear = (Button) getActivity().findViewById(R.id.button_clear);
+	        buttonClear.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					activity.clear();
+				}
+			});
+	        
+	        Button buttonStart = (Button) getActivity().findViewById(R.id.button_start);
+	        buttonStart.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					activity.listener.onRunningChange(true);	
+				}
+			});
+	        
+	        Button buttonStop = (Button) getActivity().findViewById(R.id.button_stop);
+	        buttonStop.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					activity.listener.onRunningChange(false);
+				}
+			});		
+        }
 	}
 
-	
 	/**
 	 * Custom ListFragment containing a for listing
 	 */
@@ -263,7 +347,9 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 		 * The fragment argument representing the section number for this fragment.
 		 */
 		private static final String ARG_SECTION_NUMBER = "section_number";
+		@SuppressWarnings("unused")
 		private MainActivity activity;
+		//private LocationManager locationManager; 
 
 		/**
 		 * Returns a new instance of this fragment for the given section number.
@@ -277,8 +363,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 			return fragment;
 		}
 		
-		public MyListFragment(){
-		}
+		public MyListFragment(){}
 		
 		/* (non-Javadoc)
 		 * @see android.app.ListFragment#onCreateView(android.view.LayoutInflater, android.view.ViewGroup, android.os.Bundle)
@@ -306,23 +391,5 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 			View rootView = inflater.inflate(current_layout, container, false);
 			return rootView;
 		}
-
-		/* (non-Javadoc)
-		 * @see android.app.Fragment#onActivityCreated(android.os.Bundle)
-		 */
-		@Override
-		public void onActivityCreated(Bundle savedInstanceState) {
-			super.onActivityCreated(savedInstanceState);
-			
-	        Button buttonClear = (Button) getActivity().findViewById(R.id.button_clear);
-	        buttonClear.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					activity.clear();
-				}
-			});
-		}
-
-	
 	}
 }

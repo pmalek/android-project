@@ -10,7 +10,8 @@
     <string name="stop">Stop</string>
     <string name="clear">Clear</string>
     
-    <string name="status_none">OFF</string>
+    <string name="status_off">OFF</string>
+    <string name="status_working">Working..</string>
     
     <string name="table_label_id">ID</string>
     <string name="table_label_latitude">Latitude</string>

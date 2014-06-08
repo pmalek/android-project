@@ -35,7 +35,7 @@
             android:id="@+id/textview_status"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:text="@string/status_none"
+            android:text="@string/status_off"
             android:layout_below="@id/button_start"
             android:textSize="@dimen/font_size_textview_status" />
         
