@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tableLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:shrinkColumns="*"
+    android:stretchColumns="*">
+    
+    <TableRow 
+        android:id="@+id/tableRow1"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent">
+        
+        <TextView 
+            android:id="@+id/table_textView_label_id"
+            android:text="@string/table_label_id"/>
+        
+        <TextView 
+            android:id="@+id/table_textView_label_latitude"
+            android:text="@string/table_label_latitude"/>
+        
+        <TextView 
+            android:id="@+id/table_textView_label_longitude"
+            android:text="@string/table_label_longitude"/>
+        
+        <TextView 
+            android:id="@+id/table_textView_label_altitude"
+            android:text="@string/table_label_altitude"/>
+        
+    </TableRow>
+
+    
+</TableLayout>

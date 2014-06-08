@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">android-project</string>
+    <string name="title_main">Main</string>
+    <string name="title_table_points">Saved points</string>
+    <string name="action_settings">Settings</string>
+    
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    
+    <string name="status_none">OFF</string>
+    
+    <string name="table_label_id">ID</string>
+    <string name="table_label_latitude">Latitude</string>
+    <string name="table_label_longitude">Longitude</string>
+    <string name="table_label_altitude">Altitude</string>
+
+</resources>
