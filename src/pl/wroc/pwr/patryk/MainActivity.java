@@ -6,13 +6,11 @@ import java.util.Locale;
 
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.ListFragment;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -49,6 +47,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	protected static final int SECTION_DB_TABLE = 2;
 	
 	protected LocationManager locationManger;
+	protected MyLocationListener locationListener;
 	private CoordinatesDataSource coordinates_data_source;
 	protected MyArrayAdapter adapter;
 	//protected List<EventListener> eventListenerList;
@@ -100,11 +99,10 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 					.setTabListener(this));
 		}
 		
-		MyLocationListener loclist = new MyLocationListener(
+		locationListener = new MyLocationListener(
 				this, getApplicationContext(), coordinates_data_source);
 
         locationManger = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationManger.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 1, loclist);
         
 /*        eventListenerList = new ArrayList<EventListener>();
         RunningListenerImpl listener = new RunningListenerImpl(this);
@@ -325,6 +323,9 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	        buttonStart.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
+			        activity.locationManger.requestLocationUpdates(
+			        		LocationManager.GPS_PROVIDER, 500, 1, activity.locationListener);
+
 					activity.listener.onRunningChange(true);	
 				}
 			});
@@ -333,6 +334,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	        buttonStop.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					activity.locationManger.removeUpdates(activity.locationListener);
 					activity.listener.onRunningChange(false);
 				}
 			});		
