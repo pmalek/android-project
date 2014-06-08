@@ -1,22 +1,27 @@
 package pl.wroc.pwr.patryk;
 
+import java.util.List;
 import java.util.Locale;
 
-import android.app.Activity;
 import android.app.ActionBar;
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.ListFragment;
 import android.content.Context;
-import android.support.v13.app.FragmentPagerAdapter;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.Toast;
 
 public class MainActivity extends Activity implements ActionBar.TabListener {
 
@@ -39,6 +44,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	
 	private LocationManager location_manger;
 	private CoordinatesDataSource coordinates_data_source;
+	protected MyArrayAdapter adapter;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +53,9 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 		
 		coordinates_data_source = new CoordinatesDataSource(getApplicationContext());
 		coordinates_data_source.open();
+	    List<Coordinate> values = coordinates_data_source.getAllCoordinates();
+	    adapter = new MyArrayAdapter(getApplicationContext(), values);
+	    //setListAdapter(adapter);
 
 		// Set up the action bar.
 		final ActionBar actionBar = getActionBar();
@@ -54,7 +63,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 
 		// Create the adapter that will return a fragment for each of the three
 		// primary sections of the activity.
-		mSectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager());
+		mSectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager(), this);
 
 		// Set up the ViewPager with the sections adapter.
 		mViewPager = (ViewPager) findViewById(R.id.pager);
@@ -79,18 +88,16 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 					.setText(mSectionsPagerAdapter.getPageTitle(i))
 					.setTabListener(this));
 		}
+		
 		MyLocationListener loclist = new MyLocationListener(
 				this, getApplicationContext(), coordinates_data_source);
 
         location_manger = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         location_manger.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 1, loclist);
-		
-        
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
@@ -126,21 +133,58 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 			FragmentTransaction fragmentTransaction) {
 	}
 
+	@Override
+	protected void onPause() {
+		super.onPause();
+		coordinates_data_source.close();
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		coordinates_data_source.open();
+	}
+
+	public MyArrayAdapter getMyListAdapter(){
+		return adapter;
+	}
+	
+	public void clear(){
+		adapter.clear();
+		coordinates_data_source.deleteAll();
+		Toast.makeText(getApplicationContext(), "Deleted all coordinate points", Toast.LENGTH_SHORT).show();
+	}
+	
 	/**
 	 * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
 	 * one of the sections/tabs/pages.
 	 */
 	public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-		public SectionsPagerAdapter(FragmentManager fm) {
+		private MainActivity activity;
+		
+		public SectionsPagerAdapter(FragmentManager fm, MainActivity activity) {
 			super(fm);
+			this.activity = activity;
 		}
 
 		@Override
 		public Fragment getItem(int position) {
 			// getItem is called to instantiate the fragment for the given page.
 			// Return a PlaceholderFragment (defined as a static inner class below).
-			return PlaceholderFragment.newInstance(position + 1);
+			Fragment toReturn = null;
+			switch (position) {
+			case 0:
+				toReturn = PlaceholderFragment.newInstance(position + 1);
+				break;
+			case 1:
+				toReturn = MyListFragment.newInstance(position + 1, activity);
+				((MyListFragment) toReturn).setListAdapter(adapter);
+				
+			default:
+				break;
+			}
+			return toReturn;
 		}
 
 		@Override
@@ -167,8 +211,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	 */
 	public static class PlaceholderFragment extends Fragment {
 		/**
-		 * The fragment argument representing the section number for this
-		 * fragment.
+		 * The fragment argument representing the section number for this fragment.
 		 */
 		private static final String ARG_SECTION_NUMBER = "section_number";
 
@@ -213,4 +256,75 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 		}
 	}
 
+	
+	/**
+	 * Custom ListFragment containing a for listing
+	 */
+	public static class MyListFragment extends ListFragment{
+		/**
+		 * The fragment argument representing the section number for this fragment.
+		 */
+		private static final String ARG_SECTION_NUMBER = "section_number";
+		private MainActivity activity;
+
+		/**
+		 * Returns a new instance of this fragment for the given section number.
+		 */
+		public static MyListFragment newInstance(int sectionNumber, MainActivity activity) {
+			MyListFragment fragment = new MyListFragment();
+			fragment.activity = activity;
+			Bundle args = new Bundle();
+			args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+			fragment.setArguments(args);
+			return fragment;
+		}
+		
+		public MyListFragment(){
+		}
+		
+		/* (non-Javadoc)
+		 * @see android.app.ListFragment#onCreateView(android.view.LayoutInflater, android.view.ViewGroup, android.os.Bundle)
+		 */
+		@Override
+		public View onCreateView(
+				LayoutInflater inflater, 
+				ViewGroup container,
+				Bundle savedInstanceState) {
+			int current_section = getArguments().getInt(ARG_SECTION_NUMBER);
+			int current_layout;
+
+			switch (current_section) {
+			case SECTION_MAIN:
+				current_layout = R.layout.fragment_main;
+				break;
+			case SECTION_DB_TABLE:
+				current_layout = R.layout.fragment_table_points;
+				break;
+			default:
+				current_layout = R.layout.fragment_main;
+				break;
+			}
+
+			View rootView = inflater.inflate(current_layout, container, false);
+			return rootView;
+		}
+
+		/* (non-Javadoc)
+		 * @see android.app.Fragment#onActivityCreated(android.os.Bundle)
+		 */
+		@Override
+		public void onActivityCreated(Bundle savedInstanceState) {
+			super.onActivityCreated(savedInstanceState);
+			
+	        Button buttonClear = (Button) getActivity().findViewById(R.id.button_clear);
+	        buttonClear.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					activity.clear();
+				}
+			});
+		}
+
+	
+	}
 }

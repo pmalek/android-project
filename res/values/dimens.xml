@@ -8,5 +8,7 @@
     <dimen name="font_size_textview_status">28sp</dimen>
     <dimen name="font_size_row">16dp</dimen>
     
+    <dimen name="margin_table_row">5dp</dimen>
+    
 
 </resources>

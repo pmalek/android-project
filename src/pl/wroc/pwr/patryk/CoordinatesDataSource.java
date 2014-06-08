@@ -8,6 +8,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 public class CoordinatesDataSource {
 
@@ -19,6 +20,7 @@ public class CoordinatesDataSource {
 			MySQLiteHelper.COLUMN_LATITUDE,
 			MySQLiteHelper.COLUMN_LONGITUDE,
 			MySQLiteHelper.COLUMN_ALTITUDE};
+	private static final String TAG = "CoordinatesDataSource";
 
 	public CoordinatesDataSource(Context context) {
 		dbHelper = new MySQLiteHelper(context);
@@ -45,18 +47,23 @@ public class CoordinatesDataSource {
 				MySQLiteHelper.COLUMN_ID + " = " + insertId, 
 				null, null, null, null);
 		cursor.moveToFirst();
-		Coordinate newCoordinate = cursorToCoordinate(cursor);
+		//Coordinate newCoordinate = cursorToCoordinate(cursor);
 		cursor.close();
 		return insertId;
 	}
 
 	public void deleteCoordinate(Coordinate coordinate) {
 		long id = coordinate.getId();
-		System.out.println("Coordinate deleted with id: " + id);
+		Log.v(TAG, "Coordinate deleted with id: " + id);
 		database.delete(
 				MySQLiteHelper.TABLE_COORDINATES, 
 				MySQLiteHelper.COLUMN_ID + " = " + id, 
 				null);
+	}
+	
+	public void deleteAll(){
+		Log.v(TAG, "Deleting all coordinates...");
+		database.delete(MySQLiteHelper.TABLE_COORDINATES, "", null);
 	}
 
 	public List<Coordinate> getAllCoordinates() {

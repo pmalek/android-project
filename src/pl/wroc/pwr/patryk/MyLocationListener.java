@@ -1,25 +1,20 @@
 package pl.wroc.pwr.patryk;
 
-import android.app.Activity;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
 import android.util.Log;
-import android.webkit.WebView.FindListener;
-import android.widget.TableLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class MyLocationListener implements LocationListener {
 	
-	private Activity activity;
+	private MainActivity activity;
 	private Context context;
 	private CoordinatesDataSource coordinates_data_source;
 	private static final String TAG = "MyApp";
 
-	public MyLocationListener(Activity activity, Context context,
+	public MyLocationListener(MainActivity  activity, Context context,
 			CoordinatesDataSource coordinates_data_source) {
 		super();
 		this.activity = activity;
@@ -40,9 +35,18 @@ public class MyLocationListener implements LocationListener {
         double altitude = loc.getAltitude();
         Log.v(TAG, "Altitude: " + altitude);
         
+        Coordinate coord = new Coordinate();
+        coord.setLatitude(latitude);
+        coord.setLongitude(longitude);
+        coord.setAltitude(altitude);
         long id = coordinates_data_source.createCoordinate(latitude, longitude, altitude);
+        coord.setId(id);
         
-        TableLayout table_layout = (TableLayout) activity.findViewById(R.id.tableLayout);
+        MyArrayAdapter adapter = (MyArrayAdapter) activity.getMyListAdapter();
+        adapter.add(coord);
+        adapter.notifyDataSetChanged();
+        
+/*        TableLayout table_layout = (TableLayout) activity.findViewById(R.id.tableLayout);
         TableRow table_row = new TableRow(context);
         TextView text_view_id = new TextView(context);
         text_view_id.setText(Long.toString(id));
@@ -60,7 +64,7 @@ public class MyLocationListener implements LocationListener {
         text_view_altitude.setText(Double.toString(altitude));
         table_row.addView(text_view_altitude);
         
-        table_layout.addView(table_row);
+        table_layout.addView(table_row);*/
     }
 
     @Override
